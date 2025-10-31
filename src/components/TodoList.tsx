@@ -72,10 +72,10 @@ const TodoList = () => {
   };
 
   return (
-    <div className="bg-glass backdrop-blur-sm border border-glass rounded-2xl p-6 hover:border-primary/50 transition-all duration-300">
+    <div className="bg-gradient-to-br from-accent/20 via-primary/10 to-transparent backdrop-blur-sm border border-accent/40 rounded-2xl p-6 hover:border-accent/60 transition-all duration-300 shadow-lg shadow-accent/10">
       <div className="flex items-center gap-2 mb-4">
-        <CheckSquare className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">To-Do List</h2>
+        <CheckSquare className="w-5 h-5 text-accent" />
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">To-Do List</h2>
       </div>
 
       {/* Add new todo */}
@@ -86,11 +86,11 @@ const TodoList = () => {
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
           onKeyPress={(e) => handleKeyPress(e, addTodo)}
-          className="flex-1 bg-secondary/50 border-border focus:border-primary"
+          className="flex-1 bg-secondary/70 border-accent/30 focus:border-accent focus:ring-accent/20"
         />
         <Button
           onClick={addTodo}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 shadow-lg shadow-accent/30"
           size="icon"
         >
           <Plus className="w-5 h-5" />
@@ -107,8 +107,10 @@ const TodoList = () => {
           todos.map((todo) => (
             <div
               key={todo.id}
-              className={`bg-secondary/50 rounded-xl p-3 border border-border hover:border-primary/30 transition-all duration-200 ${
-                todo.completed ? "opacity-60" : ""
+              className={`rounded-xl p-3 border transition-all duration-200 ${
+                todo.completed 
+                  ? "bg-success/10 border-success/30 opacity-70" 
+                  : "bg-secondary/70 border-accent/20 hover:border-accent/50 hover:shadow-md hover:shadow-accent/10"
               }`}
             >
               {editingId === todo.id ? (
@@ -146,12 +148,12 @@ const TodoList = () => {
                     onClick={() => toggleTodo(todo.id)}
                     className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-all duration-200 ${
                       todo.completed
-                        ? "bg-primary border-primary"
-                        : "border-muted-foreground hover:border-primary"
+                        ? "bg-gradient-to-br from-success to-success/80 border-success shadow-lg shadow-success/30"
+                        : "border-accent/50 hover:border-accent hover:shadow-md hover:shadow-accent/20"
                     }`}
                   >
                     {todo.completed && (
-                      <Check className="w-4 h-4 text-primary-foreground" />
+                      <Check className="w-4 h-4 text-white" />
                     )}
                   </button>
                   <span
@@ -165,7 +167,7 @@ const TodoList = () => {
                     onClick={() => startEdit(todo.id, todo.text)}
                     size="icon"
                     variant="ghost"
-                    className="text-muted-foreground hover:text-accent"
+                    className="text-accent/70 hover:text-accent hover:bg-accent/10"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -173,7 +175,7 @@ const TodoList = () => {
                     onClick={() => deleteTodo(todo.id)}
                     size="icon"
                     variant="ghost"
-                    className="text-muted-foreground hover:text-destructive"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -186,12 +188,12 @@ const TodoList = () => {
 
       {/* Stats */}
       {todos.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-sm text-muted-foreground">
-          <span>
+        <div className="mt-4 pt-4 border-t border-accent/20 flex items-center justify-between text-sm">
+          <span className="text-accent/90 font-medium">
             {todos.filter((t) => !t.completed).length} task
             {todos.filter((t) => !t.completed).length !== 1 ? "s" : ""} remaining
           </span>
-          <span>
+          <span className="text-success/90 font-medium">
             {todos.filter((t) => t.completed).length} completed
           </span>
         </div>
