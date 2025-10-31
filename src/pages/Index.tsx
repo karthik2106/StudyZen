@@ -3,6 +3,7 @@ import UploadZone from "@/components/UploadZone";
 import ClassCard from "@/components/ClassCard";
 import DeadlineCard from "@/components/DeadlineCard";
 import AISuggestionBox from "@/components/AISuggestionBox";
+import TodoList from "@/components/TodoList";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -75,8 +76,9 @@ const Index = () => {
           <DeadlineCard deadlines={deadlines} />
         </div>
 
-        <div className="mb-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           <AISuggestionBox />
+          <TodoList />
         </div>
 
         <Footer />
