@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { AlertCircle, Calendar, Plus, Trash2, Edit2, Check, X } from "lucide-react";
+import { AlertCircle, Calendar, Plus, Trash2, Edit2, Check, X, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -9,11 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface Deadline {
   id: string;
   title: string;
-  dueDate: string;
+  dueDate: Date;
   course: string;
   urgency: "urgent" | "warning" | "success";
 }
@@ -23,21 +31,21 @@ const DeadlineCard = () => {
     {
       id: "1",
       title: "Assignment 3: Binary Trees",
-      dueDate: "Tomorrow, 11:59 PM",
+      dueDate: new Date(Date.now() + 86400000), // Tomorrow
       course: "CS101 - Data Structures",
       urgency: "urgent",
     },
     {
       id: "2",
       title: "Project Proposal",
-      dueDate: "Friday, Oct 3",
+      dueDate: new Date(Date.now() + 3 * 86400000), // 3 days from now
       course: "SE202 - Software Engineering",
       urgency: "warning",
     },
     {
       id: "3",
       title: "Midterm Exam Preparation",
-      dueDate: "Next Monday, Oct 6",
+      dueDate: new Date(Date.now() + 7 * 86400000), // 7 days from now
       course: "CS301 - Algorithms",
       urgency: "success",
     },
@@ -48,25 +56,28 @@ const DeadlineCard = () => {
   
   const [newDeadline, setNewDeadline] = useState({
     title: "",
-    dueDate: "",
+    dueDate: undefined as Date | undefined,
     course: "",
     urgency: "success" as "urgent" | "warning" | "success",
   });
 
   const [editDeadline, setEditDeadline] = useState({
     title: "",
-    dueDate: "",
+    dueDate: undefined as Date | undefined,
     course: "",
     urgency: "success" as "urgent" | "warning" | "success",
   });
   const addDeadline = () => {
-    if (newDeadline.title.trim() && newDeadline.dueDate.trim() && newDeadline.course.trim()) {
+    if (newDeadline.title.trim() && newDeadline.dueDate && newDeadline.course.trim()) {
       const deadline: Deadline = {
         id: Date.now().toString(),
-        ...newDeadline,
+        title: newDeadline.title,
+        dueDate: newDeadline.dueDate,
+        course: newDeadline.course,
+        urgency: newDeadline.urgency,
       };
       setDeadlines([...deadlines, deadline]);
-      setNewDeadline({ title: "", dueDate: "", course: "", urgency: "success" });
+      setNewDeadline({ title: "", dueDate: undefined, course: "", urgency: "success" });
       setIsAdding(false);
     }
   };
@@ -86,10 +97,10 @@ const DeadlineCard = () => {
   };
 
   const saveEdit = (id: string) => {
-    if (editDeadline.title.trim() && editDeadline.dueDate.trim() && editDeadline.course.trim()) {
+    if (editDeadline.title.trim() && editDeadline.dueDate && editDeadline.course.trim()) {
       setDeadlines(
         deadlines.map((d) =>
-          d.id === id ? { ...d, ...editDeadline } : d
+          d.id === id ? { ...d, title: editDeadline.title, dueDate: editDeadline.dueDate, course: editDeadline.course, urgency: editDeadline.urgency } : d
         )
       );
       setEditingId(null);
@@ -101,7 +112,7 @@ const DeadlineCard = () => {
   };
 
   const cancelAdd = () => {
-    setNewDeadline({ title: "", dueDate: "", course: "", urgency: "success" });
+    setNewDeadline({ title: "", dueDate: undefined, course: "", urgency: "success" });
     setIsAdding(false);
   };
 
@@ -160,13 +171,30 @@ const DeadlineCard = () => {
             onChange={(e) => setNewDeadline({ ...newDeadline, title: e.target.value })}
             className="bg-background"
           />
-          <Input
-            type="text"
-            placeholder="Due date (e.g., Tomorrow, Friday)..."
-            value={newDeadline.dueDate}
-            onChange={(e) => setNewDeadline({ ...newDeadline, dueDate: e.target.value })}
-            className="bg-background"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal bg-background",
+                  !newDeadline.dueDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newDeadline.dueDate ? format(newDeadline.dueDate, "PPP") : <span>Pick a due date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-popover border-border z-50" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={newDeadline.dueDate}
+                onSelect={(date) => setNewDeadline({ ...newDeadline, dueDate: date })}
+                initialFocus
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
           <Input
             type="text"
             placeholder="Course name..."
@@ -228,13 +256,30 @@ const DeadlineCard = () => {
                     className="bg-background"
                     placeholder="Assignment title..."
                   />
-                  <Input
-                    type="text"
-                    value={editDeadline.dueDate}
-                    onChange={(e) => setEditDeadline({ ...editDeadline, dueDate: e.target.value })}
-                    className="bg-background"
-                    placeholder="Due date..."
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-background",
+                          !editDeadline.dueDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {editDeadline.dueDate ? format(editDeadline.dueDate, "PPP") : <span>Pick a due date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-popover border-border z-50" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={editDeadline.dueDate}
+                        onSelect={(date) => setEditDeadline({ ...editDeadline, dueDate: date })}
+                        initialFocus
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <Input
                     type="text"
                     value={editDeadline.course}
@@ -309,7 +354,7 @@ const DeadlineCard = () => {
                   <p className="text-sm text-muted-foreground mb-2">{deadline.course}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>{deadline.dueDate}</span>
+                    <span>{format(deadline.dueDate, "PPP")}</span>
                   </div>
                 </div>
               )}
