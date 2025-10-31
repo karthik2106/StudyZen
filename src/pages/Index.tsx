@@ -72,13 +72,13 @@ const Index = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <ClassCard title="Today's Classes" classes={todayClasses} />
-          <ClassCard title="Tomorrow's Classes" classes={tomorrowClasses} />
+          <TodoList />
           <DeadlineCard deadlines={deadlines} />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <AISuggestionBox />
-          <TodoList />
+          <ClassCard title="Tomorrow's Classes" classes={tomorrowClasses} />
         </div>
 
         <Footer />
