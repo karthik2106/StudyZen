@@ -39,27 +39,6 @@ const Index = () => {
     },
   ];
 
-  // Mock data for deadlines
-  const deadlines = [
-    {
-      title: "Assignment 3: Binary Trees",
-      dueDate: "Tomorrow, 11:59 PM",
-      course: "CS101 - Data Structures",
-      urgency: "urgent" as const,
-    },
-    {
-      title: "Project Proposal",
-      dueDate: "Friday, Oct 3",
-      course: "SE202 - Software Engineering",
-      urgency: "warning" as const,
-    },
-    {
-      title: "Midterm Exam Preparation",
-      dueDate: "Next Monday, Oct 6",
-      course: "CS301 - Algorithms",
-      urgency: "success" as const,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-main p-6 md:p-8">
@@ -73,7 +52,7 @@ const Index = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <ClassCard title="Today's Classes" classes={todayClasses} />
           <TodoList />
-          <DeadlineCard deadlines={deadlines} />
+          <DeadlineCard />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
