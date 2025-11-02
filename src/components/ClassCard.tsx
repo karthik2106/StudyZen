@@ -1,15 +1,16 @@
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, Info } from "lucide-react";
 
-interface Class {
+export type ClassCardEntry = {
   time: string;
   subject: string;
   location: string;
   type?: string;
-}
+  notes?: string;
+};
 
-interface ClassCardProps {
+export interface ClassCardProps {
   title: string;
-  classes: Class[];
+  classes: ClassCardEntry[];
 }
 
 const ClassCard = ({ title, classes }: ClassCardProps) => {
@@ -48,6 +49,12 @@ const ClassCard = ({ title, classes }: ClassCardProps) => {
                   <MapPin className="w-4 h-4" />
                   <span>{classItem.location}</span>
                 </div>
+                {classItem.notes && (
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground/90">
+                    <Info className="w-4 h-4 mt-0.5" />
+                    <span className="whitespace-pre-line leading-relaxed">{classItem.notes}</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}

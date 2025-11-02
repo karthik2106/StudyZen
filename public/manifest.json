@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "StudyZen - Student Dashboard",
+    "version": "1.0.0",
+    "description": "AI-powered student timetable & study assistant dashboard replacing new tab",
+    "chrome_url_overrides": {
+      "newtab": "index.html"
+    },
+    "permissions": ["storage", "alarms"],
+    "icons": {
+      "16": "studyIcon.png",
+      "48": "studyIcon.png",
+      "128": "studyIcon.png"
+    },
+    "content_security_policy": {
+      "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://schblwrgezbllznwljqq.supabase.co; worker-src 'self'; object-src 'self';"
+    }
+  }
