@@ -15,6 +15,10 @@ const App = () => (
       <Sonner />
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Index />} />
+        <Route path="/timetable" element={<Index />} />
+        <Route path="/tasks" element={<Index />} />
+        <Route path="/deadlines" element={<Index />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

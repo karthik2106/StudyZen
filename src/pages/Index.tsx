@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "@/components/Header";
-import UploadZone from "@/components/UploadZone";
-import type { ExtractedSchedulePayload } from "@/components/UploadZone";
+import UploadZone, { type ExtractedSchedulePayload, type UploadZoneHandle } from "@/components/UploadZone";
 import ClassCard, { type ClassCardEntry } from "@/components/ClassCard";
 import DeadlineCard from "@/components/DeadlineCard";
 import AISuggestionBox from "@/components/AISuggestionBox";
@@ -13,6 +12,9 @@ import TimetableDialog from "@/components/TimetableDialog";
 import { formatTimeRange } from "@/lib/time";
 import { DAY_CODES, DAY_LABELS } from "@/constants/days";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { getExtensionIdentity } from "@/lib/extensionIdentity";
+import { fetchPersistedSchedule, savePersistedSchedule } from "@/lib/api/extensionSchedule";
 import {
   Select,
   SelectContent,
@@ -22,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const WEEK_STORAGE_KEY = "study-zen-selected-week";
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -141,6 +144,76 @@ const buildClassesForDay = (chunks: DraftChunk[], day: string): ClassCardEntry[]
 const Index = () => {
   const [schedule, setSchedule] = useState<DraftChunk[]>([]);
   const [weekState, setWeekState] = useState<WeekState>(() => getInitialWeekState());
+  const [extensionId, setExtensionId] = useState<string | null>(null);
+  const [classView, setClassView] = useState<"today" | "tomorrow">("today");
+  const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const currentWeekRef = useRef(weekState.week);
+  const uploadZoneRef = useRef<UploadZoneHandle | null>(null);
+  const hasSchedule = schedule.length > 0;
+  const navLinks = useMemo(() => ([
+    {
+      label: "NTULearn",
+      href: "https://ntulearn.ntu.edu.sg",
+      icon: "/icons/ntulearn.svg",
+      alt: "NTULearn",
+    },
+    {
+      label: "ChatGPT",
+      href: "https://chatgpt.com/",
+      icon: "/icons/chatgpt.svg",
+      alt: "ChatGPT",
+    },
+  ]), []);
+
+  useEffect(() => {
+    currentWeekRef.current = weekState.week;
+  }, [weekState.week]);
+
+  useEffect(() => {
+    const sectionMap: Record<string, string> = {
+      "/dashboard": "dashboard",
+      "/timetable": "timetable",
+      "/tasks": "tasks",
+      "/deadlines": "deadlines",
+    };
+
+    const sectionId = sectionMap[location.pathname];
+    if (!sectionId) {
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        const element = document.getElementById(sectionId);
+        element?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+
+    if (location.pathname !== "/") {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  const registerUninstallCleanup = useCallback((id: string) => {
+    if (typeof chrome === "undefined" || !chrome.runtime?.setUninstallURL) {
+      return;
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+      return;
+    }
+
+    const uninstallUrl = `${supabaseUrl}/functions/v1/extension-schedule?action=delete&extensionId=${encodeURIComponent(id)}`;
+    try {
+      chrome.runtime.setUninstallURL(uninstallUrl);
+    } catch (error) {
+      console.warn("Unable to set uninstall URL:", error);
+    }
+  }, []);
 
   const persistWeekState = useCallback((state: WeekState) => {
     setWeekState(state);
@@ -158,9 +231,57 @@ const Index = () => {
     [persistWeekState],
   );
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const bootstrap = async () => {
+      try {
+        const id = await getExtensionIdentity();
+        if (cancelled) return;
+
+        setExtensionId(id);
+        registerUninstallCleanup(id);
+
+        const persisted = await fetchPersistedSchedule(id);
+        if (cancelled) return;
+
+        const persistedSchedule = Array.isArray(persisted.schedule) ? persisted.schedule : [];
+        if (persistedSchedule.length > 0) {
+          setSchedule(persistedSchedule);
+          const weeks = new Set<number>();
+          persistedSchedule.forEach((chunk) => {
+            chunk.weeks?.forEach((week) => weeks.add(week));
+          });
+          if (weeks.size > 0 && !weeks.has(currentWeekRef.current)) {
+            updateWeek(Math.min(...weeks));
+          }
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to restore timetable.";
+        console.error("Failed to restore schedule from Supabase:", error);
+        toast({
+          title: "Unable to load saved timetable",
+          description: message,
+          variant: "destructive",
+        });
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [registerUninstallCleanup, toast, updateWeek]);
+
+  const handleUploadButtonClick = useCallback(() => {
+    uploadZoneRef.current?.openFilePicker();
+  }, []);
+
   const now = new Date();
-  const todayDay = DAY_CODES[now.getDay()];
-  const tomorrowDay = DAY_CODES[(now.getDay() + 1) % DAY_CODES.length];
+  const todayIndex = now.getDay();
+  const todayDay = DAY_CODES[todayIndex];
+  const tomorrowDay = DAY_CODES[(todayIndex + 1) % DAY_CODES.length];
 
   const availableWeeks = useMemo(() => {
     const weeks = new Set<number>();
@@ -215,6 +336,16 @@ const Index = () => {
     [schedule, weekState.week],
   );
 
+  const previewDays = useMemo(
+    () => Array.from({ length: 4 }, (_, offset) => DAY_CODES[(todayIndex + offset) % DAY_CODES.length]),
+    [todayIndex],
+  );
+
+  const previewSchedule = useMemo(() => {
+    const daySet = new Set(previewDays);
+    return filteredSchedule.filter((chunk) => daySet.has(chunk.day));
+  }, [filteredSchedule, previewDays]);
+
   const todayClasses = useMemo(
     () => buildClassesForDay(filteredSchedule, todayDay),
     [filteredSchedule, todayDay],
@@ -223,10 +354,13 @@ const Index = () => {
     () => buildClassesForDay(filteredSchedule, tomorrowDay),
     [filteredSchedule, tomorrowDay],
   );
+  const displayedClasses = classView === "today" ? todayClasses : tomorrowClasses;
+  const displayedLabel = classView === "today" ? "Today's" : "Tomorrow's";
 
   const handleScheduleExtracted = useCallback(
-    ({ schedule: extractedSchedule }: ExtractedSchedulePayload) => {
+    async ({ schedule: extractedSchedule, rawText }: ExtractedSchedulePayload) => {
       setSchedule(extractedSchedule);
+
       const weeks = new Set<number>();
       extractedSchedule.forEach((chunk) => {
         chunk.weeks?.forEach((week) => weeks.add(week));
@@ -234,8 +368,27 @@ const Index = () => {
       if (weeks.size > 0 && !weeks.has(weekState.week)) {
         updateWeek(Math.min(...weeks));
       }
+
+      try {
+        let resolvedId = extensionId;
+        if (!resolvedId) {
+          resolvedId = await getExtensionIdentity();
+          setExtensionId(resolvedId);
+          registerUninstallCleanup(resolvedId);
+        }
+
+        await savePersistedSchedule(resolvedId, rawText, extractedSchedule);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unable to save timetable.";
+        console.error("Failed to persist schedule to Supabase:", error);
+        toast({
+          title: "Unable to save timetable",
+          description: message,
+          variant: "destructive",
+        });
+      }
     },
-    [updateWeek, weekState.week],
+    [extensionId, registerUninstallCleanup, toast, updateWeek, weekState.week],
   );
 
   return (
@@ -243,11 +396,44 @@ const Index = () => {
       <div className="max-w-7xl mx-auto">
         <Header />
 
-        <div className="grid gap-6 mb-6">
-          <UploadZone onScheduleExtracted={handleScheduleExtracted} />
+        <div id="dashboard" className="mb-6 space-y-4">
+          <div className="bg-glass backdrop-blur-sm border border-glass rounded-2xl px-4 py-3 md:px-6 flex flex-wrap items-center justify-between gap-3">
+            <nav className="flex flex-wrap items-center gap-3 text-sm font-medium text-muted-foreground">
+              {navLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1 transition-colors duration-200 hover:bg-primary/10 hover:text-foreground"
+                >
+                  <img
+                    src={link.icon}
+                    alt={link.alt}
+                    className="h-5 w-5 rounded-full object-contain bg-white/80 p-[2px]"
+                    referrerPolicy="no-referrer"
+                  />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </nav>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={handleUploadButtonClick}
+            >
+              Re-upload timetable
+            </Button>
+          </div>
+          <UploadZone
+            ref={uploadZoneRef}
+            onScheduleExtracted={handleScheduleExtracted}
+            isVisible={false}
+          />
         </div>
 
-        <div className="grid gap-6 mb-6 md:grid-cols-2">
+        <div id="timetable" className="grid gap-6 mb-6 md:grid-cols-2">
           {filteredSchedule.length > 0 ? (
             <Dialog>
               <div className="bg-glass backdrop-blur-sm border border-glass rounded-2xl p-4 h-full flex flex-col gap-3">
@@ -296,12 +482,12 @@ const Index = () => {
                 <DialogTrigger asChild>
                   <button
                     type="button"
-                    className="flex-1 rounded-xl border border-dashed border-border/80 bg-background/60 hover:border-primary/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background"
+                  className="flex-1 rounded-xl border border-border/70 bg-background/70 hover:border-primary/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background flex flex-col"
                   >
-                    <div className="max-h-[160px] overflow-hidden px-2 py-3">
-                      <TimetableMini schedule={filteredSchedule} />
+                    <div className="flex-1 overflow-hidden px-4 py-2 flex">
+                      <TimetableMini schedule={previewSchedule} days={previewDays} className="h-full w-full" />
                     </div>
-                    <p className="px-3 pb-3 text-[11px] text-muted-foreground text-right">
+                    <p className="px-4 pb-2 pt-1 text-[11px] text-muted-foreground text-right">
                       Click to view full timetable
                     </p>
                   </button>
@@ -325,17 +511,48 @@ const Index = () => {
               <p>Upload a timetable to see your weekly snapshot.</p>
             </div>
           )}
-          <TodoList />
+          <div id="tasks" className="h-full">
+            <TodoList />
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <ClassCard title={`Today's Classes (Week ${weekState.week})`} classes={todayClasses} />
+        <div id="deadlines" className="grid md:grid-cols-2 gap-6 mb-6">
+          <ClassCard
+            title={`${displayedLabel} Classes (Week ${weekState.week})`}
+            classes={displayedClasses}
+            actions={(
+              <div className="relative inline-flex w-44 select-none rounded-full bg-secondary/40 p-1">
+                <span
+                  className={`absolute inset-1 w-[calc(50%-0.25rem)] rounded-full bg-primary shadow-sm transition-transform duration-300 ease-out ${
+                    classView === "tomorrow" ? "translate-x-full" : "translate-x-0"
+                  }`}
+                />
+                <button
+                  type="button"
+                  className={`relative z-10 flex-1 rounded-full px-4 py-1 text-xs font-semibold transition-colors duration-200 ${
+                    classView === "today" ? "text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                  onClick={() => setClassView("today")}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  className={`relative z-10 flex-1 rounded-full px-4 py-1 text-xs font-semibold transition-colors duration-200 ${
+                    classView === "tomorrow" ? "text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                  onClick={() => setClassView("tomorrow")}
+                >
+                  Tomorrow
+                </button>
+              </div>
+            )}
+          />
           <DeadlineCard />
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <div className="grid md:grid-cols-1 gap-6 mb-6">
           <AISuggestionBox />
-          <ClassCard title={`Tomorrow's Classes (Week ${weekState.week})`} classes={tomorrowClasses} />
         </div>
 
         <Footer />

@@ -1,6 +1,7 @@
 import type { DraftChunk } from "@/lib/ocr/parseDraft";
 import { DAY_CODES } from "@/constants/days";
 import { useMemo } from "react";
+import clsx from "clsx";
 
 const COLORS = [
   "bg-primary/20 border-primary/30 text-primary-foreground",
@@ -22,26 +23,33 @@ const getColorForCourse = (course: string, index: number): string => {
 export type TimetableMiniProps = {
   schedule: DraftChunk[];
   condensed?: boolean;
+  days?: readonly string[];
+  className?: string;
 };
 
-const TimetableMini = ({ schedule }: TimetableMiniProps) => {
+const TimetableMini = ({ schedule, days, className }: TimetableMiniProps) => {
+  const dayOrder = useMemo(
+    () => (days && days.length ? Array.from(new Set(days)) : DAY_CODES),
+    [days],
+  );
+
   const groupedByDay = useMemo(() => {
     const dayMap = new Map<string, DraftChunk[]>();
-    DAY_CODES.forEach((day) => dayMap.set(day, []));
+    dayOrder.forEach((day) => dayMap.set(day, []));
     schedule.forEach((entry) => {
       if (!dayMap.has(entry.day)) {
         dayMap.set(entry.day, []);
       }
       dayMap.get(entry.day)?.push(entry);
     });
-    DAY_CODES.forEach((day) => {
+    dayOrder.forEach((day) => {
       const items = dayMap.get(day);
       if (items) {
         items.sort((a, b) => a.start.localeCompare(b.start));
       }
     });
     return dayMap;
-  }, [schedule]);
+  }, [schedule, dayOrder]);
 
   if (!schedule.length) {
     return (
@@ -50,10 +58,12 @@ const TimetableMini = ({ schedule }: TimetableMiniProps) => {
       </div>
     );
   }
-
   return (
-    <div className="grid grid-cols-7 gap-2">
-      {DAY_CODES.map((day, dayIndex) => {
+    <div
+      className={clsx("grid gap-2", className)}
+      style={{ gridTemplateColumns: `repeat(${dayOrder.length}, minmax(0, 1fr))` }}
+    >
+      {dayOrder.map((day, dayIndex) => {
         const entries = groupedByDay.get(day) ?? [];
         if (entries.length === 0) {
           return (

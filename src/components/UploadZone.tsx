@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { Upload, CheckCircle2, Redo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,29 @@ export type ExtractedSchedulePayload = {
 
 type UploadZoneProps = {
   onScheduleExtracted?: (payload: ExtractedSchedulePayload) => void;
+  isVisible?: boolean;
 };
 
-const UploadZone = ({ onScheduleExtracted }: UploadZoneProps) => {
+export type UploadZoneHandle = {
+  openFilePicker: () => void;
+};
+
+const UploadZone = forwardRef<UploadZoneHandle, UploadZoneProps>(({ onScheduleExtracted, isVisible = true }, ref) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploaded, setIsUploaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<ExtractTextResult & { name: string } | null>(null);
+
+  const openFilePicker = useCallback(() => {
+    if (isProcessing) return;
+    fileInputRef.current?.click();
+  }, [isProcessing]);
+
+  useImperativeHandle(ref, () => ({
+    openFilePicker,
+  }), [openFilePicker]);
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -44,7 +58,7 @@ const UploadZone = ({ onScheduleExtracted }: UploadZoneProps) => {
   };
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click();
+    openFilePicker();
   };
 
   const handleFileInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -101,23 +115,13 @@ const UploadZone = ({ onScheduleExtracted }: UploadZoneProps) => {
         isDragging
           ? "border-primary bg-primary/10 scale-105"
           : "border-glass hover:border-primary/50"
-      } ${isUploaded ? "border-success" : ""}`}
+      } ${isUploaded ? "border-success" : ""} ${isVisible ? "" : "hidden"}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileInputChange} />
-      {preview ? (
-        <Button
-          variant="secondary"
-          onClick={handleButtonClick}
-          disabled={isProcessing}
-          className="flex items-center gap-2 mx-auto"
-        >
-          <Redo2 className="w-4 h-4" />
-          Re-upload timetable
-        </Button>
-      ) : (
+      {preview ? null : (
         <>
           {isUploaded ? (
             <div className="animate-scale-in">
@@ -145,6 +149,8 @@ const UploadZone = ({ onScheduleExtracted }: UploadZoneProps) => {
       )}
     </div>
   );
-};
+});
+
+UploadZone.displayName = "UploadZone";
 
 export default UploadZone;

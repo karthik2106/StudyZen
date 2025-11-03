@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { Calendar, MapPin, Clock, Info } from "lucide-react";
 
 export type ClassCardEntry = {
@@ -11,14 +12,18 @@ export type ClassCardEntry = {
 export interface ClassCardProps {
   title: string;
   classes: ClassCardEntry[];
+  actions?: ReactNode;
 }
 
-const ClassCard = ({ title, classes }: ClassCardProps) => {
+const ClassCard = ({ title, classes, actions }: ClassCardProps) => {
   return (
     <div className="bg-glass backdrop-blur-sm border border-glass rounded-2xl p-6 hover:border-primary/50 transition-all duration-300">
-      <div className="flex items-center gap-2 mb-4">
-        <Calendar className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">{title}</h2>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
+        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
       
       {classes.length === 0 ? (

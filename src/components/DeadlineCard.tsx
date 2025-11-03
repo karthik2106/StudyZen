@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { AlertCircle, Calendar, Plus, Trash2, Edit2, Check, X, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { AlertCircle, Calendar, Plus, Trash2, Edit2, Check, X, CalendarIcon, CalendarPlus } from "lucide-react";
+import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -140,6 +140,22 @@ const DeadlineCard = () => {
       default:
         return "bg-muted";
     }
+  };
+
+  const buildGoogleCalendarUrl = (deadline: Deadline): string => {
+    const startDate = format(deadline.dueDate, "yyyyMMdd");
+    const endDate = format(addDays(deadline.dueDate, 1), "yyyyMMdd");
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: deadline.title,
+      dates: `${startDate}/${endDate}`,
+      details: `Course: ${deadline.course}`,
+    });
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timeZone) {
+      params.append("ctz", timeZone);
+    }
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   };
 
   return (
@@ -355,6 +371,19 @@ const DeadlineCard = () => {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>{format(deadline.dueDate, "PPP")}</span>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={buildGoogleCalendarUrl(deadline)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2"
+                      >
+                        <CalendarPlus className="w-4 h-4" />
+                        Add to Google Calendar
+                      </a>
+                    </Button>
                   </div>
                 </div>
               )}
