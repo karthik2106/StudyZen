@@ -40,6 +40,16 @@ Whether you're planning revision sessions, tracking coursework deadlines, or jus
 ## 📸 Sneak Peek
 
 
+### 📅 MainPage
+Beautifully organized class cards and upcoming deadlines at a glance.  
+![Dashboard](assets/dashboard.png)
+
+### 🧾 Timetable popup
+AI extracts class data directly from your uploaded NTU PDF timetable.  
+![timetable](assets/timetable.png)
+
+
+
 - Dashboard with Timetable View  
 - AI-Generated Study Plan  
 - To-Do and Deadline Cards  
