@@ -18,7 +18,7 @@ Whether you're planning revision sessions, tracking coursework deadlines, or jus
 - 🧾 **Timetable OCR (Gemini Pro API)** — Upload any NTU timetable PDF; it’s automatically parsed into class cards and schedule blocks.  
 - 🕒 **AI-Generated Study Schedule** — Converts free slots into optimal study sessions, minimizing overload.  
 - ✅ **To-Do Management** — Add, prioritize, and mark off tasks with a clean, distraction-free interface.  
-- 📚 **Deadline Tracking** — Automatically extracts and displays assignment or exam deadlines.  
+- 📚 **Deadline Tracking** —  displays assignment or exam deadlines, and it can be added to google calender 
 - 💡 **AI Suggestion Box** — Personalized task or study-tip generation based on workload and time availability.  
 - ☁️ **Supabase Integration** — Secure cloud storage for user tasks, timetables, and preferences.  
 - 🎨 **Modern UI** — Built with React + Tailwind CSS for a sleek, minimal, and responsive experience.
