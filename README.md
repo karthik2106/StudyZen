@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# 🧠 StudyZen — AI Timetable & Productivity Assistant
 
-## Project info
+**StudyZen** is an AI-powered Chrome Extension that transforms your uploaded university timetable into a personalized study planner — built to help **NTU students** (and anyone else who studies smart ✨) stay organized, focused, and productive.
 
-**URL**: https://lovable.dev/projects/b42513cb-8e60-4a2e-8c22-09b45efb2353
+---
 
-## How can I edit this code?
+## 🚀 Overview
 
-There are several ways of editing your application.
+StudyZen intelligently reads and converts PDF timetables into a structured dashboard of classes, deadlines, and to-dos.  
+It leverages **Gemini Pro API** for OCR and context extraction, then uses built-in AI models to generate **smart task breakdowns** and **study suggestions** tailored to your schedule.
 
-**Use Lovable**
+Whether you're planning revision sessions, tracking coursework deadlines, or just finding your next productive hour — StudyZen keeps you one step ahead.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b42513cb-8e60-4a2e-8c22-09b45efb2353) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✨ Key Features
 
-**Use your preferred IDE**
+- 🧾 **Timetable OCR (Gemini Pro API)** — Upload any NTU timetable PDF; it’s automatically parsed into class cards and schedule blocks.  
+- 🕒 **AI-Generated Study Schedule** — Converts free slots into optimal study sessions, minimizing overload.  
+- ✅ **To-Do Management** — Add, prioritize, and mark off tasks with a clean, distraction-free interface.  
+- 📚 **Deadline Tracking** — Automatically extracts and displays assignment or exam deadlines.  
+- 💡 **AI Suggestion Box** — Personalized task or study-tip generation based on workload and time availability.  
+- ☁️ **Supabase Integration** — Secure cloud storage for user tasks, timetables, and preferences.  
+- 🎨 **Modern UI** — Built with React + Tailwind CSS for a sleek, minimal, and responsive experience.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🧠 Tech Stack
 
-Follow these steps:
+| Layer | Technology |
+|-------|-------------|
+| Frontend | React + TypeScript + Vite |
+| Styling | Tailwind CSS |
+| Database & Auth | Supabase |
+| AI / OCR | Gemini Pro API |
+| Extension Framework | Chrome Manifest V3 |
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 📸 Sneak Peek
 
-# Step 3: Install the necessary dependencies.
-npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+- Dashboard with Timetable View  
+- AI-Generated Study Plan  
+- To-Do and Deadline Cards  
+- Suggestion Panel  
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🌐 Designed For
 
-**Use GitHub Codespaces**
+Originally created for **Nanyang Technological University (NTU)** students to simplify academic planning — but fully adaptable for **any student or self-learner** who wants AI-driven productivity.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## 🧩 Core Components
 
-This project is built with:
+- `UploadZone.tsx` — Handles PDF uploads and OCR extraction  
+- `TimetableDialog.tsx` — Displays AI-parsed class schedules  
+- `TodoList.tsx` — Smart task manager with progress tracking  
+- `DeadlineCard.tsx` — Upcoming deadlines and reminders  
+- `AISuggestionBox.tsx` — Context-aware productivity suggestions  
+- `Supabase` — Auth + persistent user data  
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## 📄 License
 
-Simply open [Lovable](https://lovable.dev/projects/b42513cb-8e60-4a2e-8c22-09b45efb2353) and click on Share -> Publish.
+MIT License © 2025 Karthik Adharsh Selvakumar
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### 💬 “Study smarter. Plan effortlessly. Let AI handle the rest.”
